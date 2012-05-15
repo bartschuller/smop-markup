@@ -6,7 +6,7 @@ class MacroSpec extends Specification {
     import org.smop.markup.Markup
     "do basic stuff" in {
       implicit val myBuilder: XMLBuilder = ToString
-      val xobjs = x"""<a href="http://example.org/">Hi there</a>"""
+      val xobjs = x"""<a href="http://example.org/">Hi there</a>."""
       println("xml objects: "+xobjs)
       success
     }

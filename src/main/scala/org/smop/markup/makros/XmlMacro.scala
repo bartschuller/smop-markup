@@ -37,6 +37,6 @@ object XmlMacro {
     // hard code something for now
     val builder: XMLBuilder = ToScalaXML
 
-    builder(c)(mNodes, params:_*)
+    builder(c)(mNodes, params)
   }
 }

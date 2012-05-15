@@ -15,7 +15,7 @@ object MPlaceholderString extends MString
 case class MWrappedString(s: String) extends MString
 
 sealed trait MNode
-case class MElement(name: String, attributes: Map[String, MString], placeholderAttributes: Boolean, children: List[MNode]) extends MNode
+case class MElement(name: String, attributes: Map[String, MString], placeholderAttributes: Boolean, isEmpty: Boolean, children: List[MNode]) extends MNode
 case class MText(value: String) extends MNode
 case object MPlaceholder extends MNode
 

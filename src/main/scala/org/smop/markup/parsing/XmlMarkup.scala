@@ -41,7 +41,7 @@ class XmlMarkup(val entityMap: Map[String, String]) extends RegexParsers {
 
   lazy val nonText: Parser[MNode] = placeholder | emptyElement | element
 
-  val placeholder: Parser[MNode] = XmlMarkup.placeholderString ^^ {_ => MPlaceholder}
+  lazy val placeholder: Parser[MNode] = XmlMarkup.placeholderString ^^ {_ => MPlaceholder}
   
   lazy val emptyElement: Parser[MElement] = "<"~> name ~ attributes <~ opt(space)<~"/>" ^^ makeEmptyElement
 
@@ -60,19 +60,19 @@ class XmlMarkup(val entityMap: Map[String, String]) extends RegexParsers {
 
   lazy val nameChars: Parser[String] = "[-.0-9:A-Z_a-z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u037D\u037F-\u1FFF\u200C-\u200D\u203F-\u2040\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]*".r
 
-  val name: Parser[String] = nameStartChar~nameChars ^^ {case start~rest => start+rest}
+  lazy val name: Parser[String] = nameStartChar~nameChars ^^ {case start~rest => start+rest}
 
   private val makeEntityRef: String => Parser[String] = {
     case e => entityMap.get(e).fold[Parser[String]](err(s"unknown entity $e"))(success(_))
   }
 
   private val makeEmptyElement: String~(Map[String, MString], Boolean) => MElement = {
-    case elementName~attributesPlus => MElement(elementName, attributesPlus._1, attributesPlus._2, Nil)
+    case elementName~attributesPlus => MElement(elementName, attributesPlus._1, attributesPlus._2, true, Nil)
   }
 
   private val makeElement: String~(Map[String, MString], Boolean)~List[MNode]~String => Parser[MElement] = { case open~attributesPlus~children~close =>
     if (open == close) {
-      success(MElement(open, attributesPlus._1, attributesPlus._2, children))
+      success(MElement(open, attributesPlus._1, attributesPlus._2, false, children))
     } else
       err(s"mismatched open and close tags ($open versus $close)")
   }
