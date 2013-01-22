@@ -1,84 +1,108 @@
 package org.smop.markup.makros
 
-import reflect.makro.Context
-import xml._
-import org.smop.markup.ast.{MElement, MNode}
+import scala.reflect.macros.Context
+import org.smop.markup.ast._
 
-object ToScalaXML extends XMLBuilder {
-  def apply(c: Context)(mNodes: List[MNode], paramsSeq: Seq[c.Expr[Any]]): c.Expr[Any] = {
+class ToScalaXML[C <: Context](val c: C) extends XMLBuilder[C] {
+  def apply(mNodes: List[MNode], paramsSeq: Seq[c.Expr[Any]]): c.Expr[Any] = {
     val params = paramsSeq.toList
-    import c.mirror._
-    val tree = if (mNodes.tail.isEmpty)
-        single(c)(mNodes.head, params)
-      else {
-        val children = mNodes.map(mNode=>single(c)(mNode, params))
-        group(c)(mNodes, params)
-      }
+    import c.universe._
+    val (tree, _) = //if (mNodes.tail.isEmpty)
+        single(mNodes.head, params)
+      //else {
+        //val children = mNodes.map(mNode=>single(mNode, params))
+        //group(mNodes, params)
+      //}
+    c.Expr(tree)
   }
 
-  def group(c: Context)(mNodes: List[MNode], params: Seq[c.Expr[Any]]): List[c.Tree] = {
-    import c.mirror._
-    if (mNodes.tail.isEmpty) {
-      single(c)(mNodes.head, params)
-    } else {
-      val children = mNodes.map(mNode=>single(c)(mNode, params).tree)
+  def group(mNodes: List[MNode], params: Seq[c.Expr[Any]]): List[c.Tree] = {
+//    import c.universe._
+//    if (mNodes.tail.isEmpty) {
+//      single(mNodes.head, params)
+//    } else {
+//      val children = mNodes.map(mNode=>single(mNode, params).tree)
+//      Apply(
+//        Select(
+//          New(
+//            Ident(
+//              newTypeName("Group")
+//            )
+//          ),
+//          newTermName("<init>")
+//        ),
+//        List(
+//          Apply(
+//            Select(
+//              Ident(
+//                newTermName("Seq")
+//              ),
+//              newTermName("apply")
+//            ),
+//            children
+//          )
+//        )
+//      )
+//    }
+    ???
+  }
+
+  def single(mNode: MNode, params: List[c.Expr[Any]]): (c.Tree, List[c.Expr[Any]]) = {
+    mNode match {
+      case el: MElement => element(el, params)
+      case txt: MText => (text(txt), params)
+      case MPlaceholder => placeholder(params)
+    }
+  }
+
+  def element(el: MElement, params: List[c.Expr[Any]]): (c.Tree, List[c.Expr[Any]]) = {
+    import c.universe._
+
+    val label = Literal(Constant(el.name))
+    val minimizeEmpty = Literal(Constant(el.isEmpty))
+    val children = el.children.map(c=>single(c, params)._1)
+    val newParams = params // FIXME the above needs to be a fold or something that gives us the params left
+    val tree =
       Apply(
         Select(
           New(
-            Ident(
-              newTypeName("Group")
-            )
-          ),
-          newTermName("<init>")
-        ),
+            Select(Select(Ident("scala"), newTermName("xml")), newTypeName("Elem"))
+          ), nme.CONSTRUCTOR),
         List(
-          Apply(
-            Select(
-              Ident(
-                newTermName("Seq")
-              ),
-              newTermName("apply")
-            ),
-            children
-          )
-        )
+          Literal(Constant(null)),
+          label,
+          Select(Select(Ident("scala"), newTermName("xml")), newTermName("Null")),
+          Select(Select(Ident("scala"), newTermName("xml")), newTermName("TopScope")),
+          minimizeEmpty
+        ) ++ children
       )
-    }
+    (tree, newParams)
   }
 
-  def single(c: Context)(mNode: MNode, params: Seq[c.Expr[Any]]): c.Tree = {
-    mNode match {
-      case el: MElement => element(c)(el, params)
-    }
-  }
-
-  def element (c: Context)(el: MElement, params: Seq[c.Expr[Any]]): c.Tree = {
-    import c.mirror._
+  def text(txt: MText): c.Tree = {
+    import c.universe._
     Apply(
-      Select(
-        New(
-          Ident(
-            newTypeName("Elem")
-          )
-        ),
-        newTermName("<init>")
-      ),
-      List(
-        Literal(Constant(null)),
-        Literal(Constant(el.name)),
-        Select(Select(Ident(newTermName("scala")), newTermName("xml")), newTermName("Null")),
-        Select(Select(Ident(newTermName("scala")), newTermName("xml")), newTermName("TopScope")),
-        Literal(Constant(el.isEmpty)),
-        Apply(
           Select(
-            Ident(
-              newTermName("Seq")
-            ),
-            newTermName("apply")
-          ),
-          apply(c)(el.children, params)
+            New(
+              Select(Select(Ident("scala"), newTermName("xml")), newTypeName("Text"))
+            ), nme.CONSTRUCTOR),
+          List(
+            Literal(Constant(txt.value))
+          )
         )
-      )
-    )
+  }
+
+  def placeholder(params: List[c.Expr[Any]]): (c.Tree, List[c.Expr[Any]]) = {
+    import c.universe._
+    val tree = Apply(
+              Select(
+                New(
+                  Select(Select(Ident("scala"), newTermName("xml")), newTypeName("Text"))
+                ), nme.CONSTRUCTOR),
+              List(
+                Apply(Select(params.head.tree, newTermName("toString")), List())
+                  ))
+    c.info(c.enclosingPosition, showRaw(tree, true), force=false)
+    (tree, params.tail)
   }
 }

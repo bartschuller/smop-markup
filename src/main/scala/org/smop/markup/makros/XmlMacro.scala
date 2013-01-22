@@ -1,16 +1,16 @@
 package org.smop.markup.makros
 
-import reflect.makro.Context
+import scala.reflect.macros.Context
 import org.smop.markup.parsing.XmlMarkup
 import org.smop.markup.ast.MNode
 
 object XmlMacro {
-  def xImpl(c: Context)(params: c.Expr[Any]*)(implicitBuilder: c.Expr[XMLBuilder]): c.Expr[Any] = {
-    import c.{mirror=>mi}
-    import mi._
+  // def xImpl(c: Context)(params: c.Expr[Any]*)(implicitBuilder: c.Expr[XMLBuilder]): c.Expr[Any] = {
+  def xImpl(c: Context)(params: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
     val mNodes: List[MNode] = c.prefix.tree match {
       case Apply(_, List(Apply(_, parts))) =>
-        val stringList = for(Literal(mi.Constant(stringConstant: String)) <- parts) yield stringConstant
+        val stringList = for(Literal(Constant(stringConstant: String)) <- parts) yield stringConstant
         val markup = stringList.mkString(XmlMarkup.placeholderString)
         XmlMarkup.parse(markup) match {
           case Right(ast) => ast
@@ -25,7 +25,7 @@ object XmlMacro {
 
     // How to get our preferred builder?
 
-    println(show(implicitBuilder.tree))
+    // println(show(implicitBuilder.tree))
     // Prints "smop.this.markup.`package`.defaultBuilder" when no other implicits in scope, or
     // "myBuilder" when I put
     // implicit val myBuilder: XMLBuilder = ToString
@@ -35,8 +35,8 @@ object XmlMacro {
     // val builder: XMLBuilder = c.Expr[XMLBuilder](c.resetAllAttrs(implicitBuilder.tree)).eval
 
     // hard code something for now
-    val builder: XMLBuilder = ToScalaXML
+    val builder: XMLBuilder[c.type] = new ToScalaXML[c.type](c)
 
-    builder(c)(mNodes, params)
+    builder(mNodes, params)
   }
 }

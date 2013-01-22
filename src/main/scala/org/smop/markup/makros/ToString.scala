@@ -1,11 +1,11 @@
 package org.smop.markup.makros
 
-import reflect.makro.Context
+import scala.reflect.macros.Context
 import org.smop.markup.ast.MNode
 
-object ToString extends XMLBuilder {
-  def apply(c: Context)(mNodes: List[MNode], params: Seq[c.Expr[Any]]): c.Expr[Any] = {
-    import c.mirror._
+class ToString[C <: Context](val c: C) extends XMLBuilder[C] {
+  def apply(mNodes: List[MNode], params: Seq[c.Expr[Any]]): c.Expr[Any] = {
+    import c.universe._
     val theString = mNodes.toString()
     c.Expr[String](Literal(Constant(theString)))
   }
