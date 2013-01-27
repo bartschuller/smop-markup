@@ -26,24 +26,24 @@ class XmlMarkupSpec extends Specification {
       parse("&amp;&lt;&gt;&apos;&quot;") should beRight(List(MText("&<>'\"")))
     }
     "parse empty elements" in {
-      parse("<foo/>") should beRight(List(MElement("foo", Map.empty, false, true, Nil)))
-      parse("<foo/><bar/>") should beRight(List(MElement("foo", Map.empty, false, true, Nil), MElement("bar", Map.empty, false, true, Nil)))
-      parse("<foo></foo>") should beRight(List(MElement("foo", Map.empty, false, false, Nil)))
+      parse("<foo/>") should beRight(List(MElement("foo", Seq.empty, false, true, Nil)))
+      parse("<foo/><bar/>") should beRight(List(MElement("foo", Seq.empty, false, true, Nil), MElement("bar", Seq.empty, false, true, Nil)))
+      parse("<foo></foo>") should beRight(List(MElement("foo", Seq.empty, false, false, Nil)))
     }
     "parse nonempty elements" in {
-      parse("<a><b/></a>") should beRight(List(MElement("a", Map.empty, false, false, List(MElement("b", Map.empty, false, true, Nil)))))
+      parse("<a><b/></a>") should beRight(List(MElement("a", Seq.empty, false, false, List(MElement("b", Seq.empty, false, true, Nil)))))
     }
     "parse placeholders in mixed content" in {
-      parse(s"<a/>.$ph") should beRight(List(MElement("a", Map.empty, false, true, Nil), MText("."), MPlaceholder))
+      parse(s"<a/>.$ph") should beRight(List(MElement("a", Seq.empty, false, true, Nil), MText("."), MPlaceholder))
     }
     "parse attributes" in {
-      parse("""<a a="a a"/>""") should beRight(List(MElement("a", Map("a"->"a a"), false, true, Nil)))
-      parse("""<a a='a"&apos; a' >a</a>""") should beRight(List(MElement("a", Map("a"->"a\"' a"), false, false, List(MText("a")))))
-      parse("""<a a=">" b=''/>""") should beRight(List(MElement("a", Map("a"->">", "b"->""), false, true, Nil)))
+      parse("""<a a="a a"/>""") should beRight(List(MElement("a", Seq("a"->"a a"), false, true, Nil)))
+      parse("""<a a='a"&apos; a' >a</a>""") should beRight(List(MElement("a", Seq("a"->"a\"' a"), false, false, List(MText("a")))))
+      parse("""<a a=">" b=''/>""") should beRight(List(MElement("a", Seq("a"->">", "b"->""), false, true, Nil)))
       parse("""<a a="<"/>""") should beLeft
     }
     "parse placeholders for attribute values" in {
-      parse(s"""<a a=$ph />""") should beRight(List(MElement("a", Map("a"->MPlaceholderString), false, true, Nil)))
+      parse(s"""<a a=$ph />""") should beRight(List(MElement("a", Seq("a"->MPlaceholderString), false, true, Nil)))
     }
     "expand custom entity sets" in {
       val myEntities = XmlMarkup.xml5StandardEntities ++ Map("euro"->"€")

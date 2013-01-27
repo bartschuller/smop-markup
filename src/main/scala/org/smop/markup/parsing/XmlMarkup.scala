@@ -47,7 +47,7 @@ class XmlMarkup(val entityMap: Map[String, String]) extends RegexParsers {
 
   lazy val element: Parser[MElement] = ("<"~> name ~ attributes <~opt(space)<~">")~ mixed ~("</"~> name <~opt(space)<~">") >> makeElement
 
-  lazy val attributes: Parser[(Map[String, MString], Boolean)] = rep(space~>attribute)~opt(placeholder) ^^ {case l~op => (l.toMap, op.isDefined)}
+  lazy val attributes: Parser[(Seq[(String, MString)], Boolean)] = rep(space~>attribute)~opt(placeholder) ^^ {case l~op => (l, op.isDefined)}
   
   lazy val attribute: Parser[(String,MString)] = (name <~ eq) ~ attributeValue ^^ {case n~v => (n,v)}
 
@@ -66,11 +66,11 @@ class XmlMarkup(val entityMap: Map[String, String]) extends RegexParsers {
     case e => entityMap.get(e).fold[Parser[String]](err(s"unknown entity $e"))(success(_))
   }
 
-  private val makeEmptyElement: String~(Map[String, MString], Boolean) => MElement = {
+  private val makeEmptyElement: String~(Seq[(String, MString)], Boolean) => MElement = {
     case elementName~attributesPlus => MElement(elementName, attributesPlus._1, attributesPlus._2, true, Nil)
   }
 
-  private val makeElement: String~(Map[String, MString], Boolean)~List[MNode]~String => Parser[MElement] = { case open~attributesPlus~children~close =>
+  private val makeElement: String~(Seq[(String, MString)], Boolean)~List[MNode]~String => Parser[MElement] = { case open~attributesPlus~children~close =>
     if (open == close) {
       success(MElement(open, attributesPlus._1, attributesPlus._2, false, children))
     } else
