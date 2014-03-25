@@ -5,7 +5,7 @@ object Build extends Build {
   val sharedSettings = Defaults.defaultSettings ++ Seq(
     organization := "org.smop",
     version := "0.1.0-SNAPSHOT",
-    scalaVersion := "2.10.0",
+    scalaVersion := "2.10.4",
     scalacOptions ++= Seq("-Ymacro-debug-lite")
   )
 
@@ -16,6 +16,6 @@ object Build extends Build {
       name := "smop-markup",
       libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _),
       libraryDependencies ++= Seq(
-        "org.specs2" %% "specs2" % "1.13" % "test"
+        "org.specs2" %% "specs2" % "2.3.10" % "test"
   )))
 }

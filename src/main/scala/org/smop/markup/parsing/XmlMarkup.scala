@@ -103,7 +103,7 @@ object XmlMarkup {
   private def doParse(parser: XmlMarkup, markup: String): Either[String, List[MNode]] = {
     val reader = new PagedSeqReader(PagedSeq.fromReader(new StringReader(markup)))
     parser.parseAll(parser.mixed, reader) match {
-      case parser.Success(l, _) => Right(l)
+      case parser.Success(l: List[MNode], _) => Right(l)
       case parser.NoSuccess(msg, _) => Left(msg)
     }
   }
