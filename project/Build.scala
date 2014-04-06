@@ -5,8 +5,8 @@ object Build extends Build {
   val sharedSettings = Defaults.defaultSettings ++ Seq(
     organization := "org.smop",
     version := "0.1.0-SNAPSHOT",
-    scalaVersion := "2.10.4",
-    scalacOptions ++= Seq("-Ymacro-debug-lite")
+    scalaVersion := "2.10.4"
+    //scalacOptions ++= Seq("-Ymacro-debug-lite")
   )
 
   lazy val root = Project(
